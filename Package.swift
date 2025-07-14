@@ -5,20 +5,18 @@ import PackageDescription
 
 let package = Package(
     name: "Cachew",
+    platforms: [ .iOS(.v14), .macOS(.v11) ],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "Cachew",
-            targets: ["Cachew"]),
+            targets: ["Cachew"])
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "Cachew"),
         .testTarget(
             name: "CachewTests",
             dependencies: ["Cachew"]
-        ),
+        )
     ]
 )
