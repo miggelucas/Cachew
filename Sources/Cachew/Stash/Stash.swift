@@ -8,10 +8,10 @@
 import Foundation
 
 public actor Stash<Key: CachewKey, Value: Sendable>: Cache {
-
-    // --- Core Storage ---
     
     private let cache = NSCache<WrappedKey, Container<Value>>()
+    
+    public init() {}
     
     public func setValue(_ value: Value, forKey key: Key) {
         let entry = Container(value: value)
@@ -29,8 +29,9 @@ public actor Stash<Key: CachewKey, Value: Sendable>: Cache {
         let wrappedKey = WrappedKey(key)
         cache.removeObject(forKey: wrappedKey)
     }
-    
-    
+}
+
+extension Stash {
     /// `NSCache` also requires its values to be class objects.
     /// This container wraps our generic `Value` (which could be a struct or other value type).
     private final class Container<T> {
