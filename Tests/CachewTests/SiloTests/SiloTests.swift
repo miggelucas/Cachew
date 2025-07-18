@@ -38,8 +38,7 @@ final class SiloTests {
         #expect(throws: SiloError.cacheDirectoryMissing) {
             _ = try Silo<String, User>(cacheName: self.siloName, fileManager: fileManager)
         }
-        #expect(SiloError.cacheDirectoryMissing.errorDescription?.isEmpty == false, "Should have some error description"
-        )
+        #expect(SiloError.cacheDirectoryMissing.errorDescription?.isEmpty == false, "Should have some error description")
     }
     
     @Test("setValue should use fileManager to write data")
