@@ -68,4 +68,5 @@ struct StashTests {
         #expect(valueAfterUpdate != valueBeforeUpdate)
         #expect(valueAfterUpdate == newValue)
     }
+    
 }

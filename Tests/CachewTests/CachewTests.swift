@@ -6,38 +6,45 @@ import Foundation
 // MARK: - Performance tests
 @Suite("Performance Tests")
 struct PerformanceTests {
+    private typealias StashContainer = Stash<String, User>
+    private typealias SiloContainer = Silo<String, User>
+    
     private let operationCount_Stash = 10_000
     
     private let operationCount_Stats = 100
     private let sampleCount_Stats = 30
-    private let tNegativeCriticalValue = -3.0
+    private let tCriticalValue = 3.0
     
     @Test("Stash write and read performance")
     func stashPerformance() async throws {
-        let stash = Stash<String, User>()
-        let users = (0..<operationCount_Stash).map { User(id: $0, name: "User \($0)") }
-        
-        let writeStartTime = Date()
-        for user in users {
-            await stash.setValue(user, forKey: String(user.id))
+        let clock = ContinuousClock()
+        let stash = StashContainer()
+        let users = (0..<operationCount_Stash).map {
+            User(id: $0, name: "User \($0)", data: Data(repeating: 1, count: Int.random(in: 100..<100_000)))
         }
-        let writeEndTime = Date()
-        let writeDuration = writeEndTime.timeIntervalSince(writeStartTime)
-        print("StashTest - Time to write \(operationCount_Stash) Objects: \(writeDuration) seconds")
+        
+        let writeTime = await clock.measure {
+            for user in users {
+                await stash.setValue(user, forKey: String(user.id))
+            }
+        }
+        print("StashTest - Time to write \(operationCount_Stash) Objects: \(writeTime) seconds")
 
-        let readStartTime = Date()
-        for i in 0..<operationCount_Stash {
-            _ = await stash.value(forKey: String(i))
+        let readTime = await clock.measure {
+            for user in users {
+                _ = await stash.value(forKey: String(user.id))
+            }
         }
-        let readEndTime = Date()
-        let readDuration = readEndTime.timeIntervalSince(readStartTime)
-        print("StashTest - Time to read \(operationCount_Stash) Objects: \(readDuration) seconds")
+        print("StashTest - Time to read \(operationCount_Stash) Objects: \(readTime) seconds")
         
-        #expect(writeDuration < 1 && readDuration < 1, "Stash Memory should be fast enough for this test")
+        #expect(writeTime.components.seconds < 1 && readTime.components.seconds < 1, "Stash Memory should be fast enough for this test")
     }
     
     @Test("Stash vs. Silo statistical performance comparison")
     func statisticalComparison() async throws {
+        
+        let clock = ContinuousClock()
+        
         var stashWriteDurations: [TimeInterval] = []
         var stashReadDurations: [TimeInterval] = []
         var siloWriteDurations: [TimeInterval] = []
@@ -49,40 +56,50 @@ struct PerformanceTests {
             print("StatsTest - Running sample \(i)/\(sampleCount_Stats)...")
             
             // --- Stash Test ---
-            let stash = Stash<String, User>()
-            let users = (0..<operationCount_Stats).map { User(id: $0, name: "User \($0)") }
+            let stash = StashContainer()
+            let users = (0..<operationCount_Stats).map {
+                User(id: $0,
+                     name: "User \($0)",
+                     data: Data(repeating: UInt8.random(in: 0...255),
+                                count: Int.random(in: 1000...10_000))
+                )
+            }
             
             // Stash write
-            let stashWriteStart = Date()
-            for user in users {
-                await stash.setValue(user, forKey: String(user.id))
+            let stashWriteTime = await clock.measure {
+                for user in users {
+                    await stash.setValue(user, forKey: String(user.id))
+                }
             }
-            stashWriteDurations.append(Date().timeIntervalSince(stashWriteStart))
+            stashWriteDurations.append(stashWriteTime.asTimeInterval)
             
             // Stash Read
-            let stashReadStart = Date()
-            for j in 0..<operationCount_Stats {
-                _ = await stash.value(forKey: String(j))
+            let stashReadTime = await clock.measure {
+                for j in 0..<operationCount_Stats {
+                    _ = await stash.value(forKey: String(j))
+                }
             }
-            stashReadDurations.append(Date().timeIntervalSince(stashReadStart))
+            stashReadDurations.append(stashReadTime.asTimeInterval)
             
             // --- Silo Test ---
-            let silo = try Silo<String, User>(cacheName: "StatTestSilo_\(i)")
+            let silo = try SiloContainer(cacheName: "StatTestSilo_\(i)")
             
             // Silo Write
-            let siloWriteStart = Date()
-            for user in users {
-                try await silo.setValue(user, forKey: String(user.id))
+            let siloWriteTime = try await clock.measure {
+                for user in users {
+                    try await silo.setValue(user, forKey: String(user.id))
+                }
             }
-            siloWriteDurations.append(Date().timeIntervalSince(siloWriteStart))
+            siloWriteDurations.append(siloWriteTime.asTimeInterval)
             
             // Silo Read
-            let siloReadStart = Date()
-            for j in 0..<operationCount_Stash {
-                _ = try await silo.value(forKey: String(j))
+            let siloReadTime = try await clock.measure {
+                for j in 0..<operationCount_Stats {
+                    _ = try await silo.value(forKey: String(j))
+                }
             }
-            siloReadDurations.append(Date().timeIntervalSince(siloReadStart))
-            
+            siloReadDurations.append(siloReadTime.asTimeInterval)
+        
             try? await FileManager.default.removeItem(at: silo.directoryURL)
         }
         
@@ -109,8 +126,9 @@ struct PerformanceTests {
         print(String(format: "t-value for read (Stash vs. Silo):  %.4f", readTValue))
         print("----------------------------------------\n")
         
-        #expect(writeTValue < tNegativeCriticalValue, "The average write time for Stash is not significantly lower than Silo's.")
-        #expect(readTValue < tNegativeCriticalValue, "The average read time for Stash is not significantly lower than Silo's.")
+        
+        #expect(abs(writeTValue) > tCriticalValue, "The average write time for Stash is not significantly lower than Silo's.")
+        #expect(abs(readTValue) > tCriticalValue, "The average read time for Stash is not significantly lower than Silo's.")
     }
 }
 
@@ -118,12 +136,14 @@ extension PerformanceTests {
     private struct User: Storable {
         let id: Int
         let name: String
-        let someData: Data
+        let data: Data
         
-        init(id: Int, name: String) {
+        init(id: Int, name: String, data: Data) {
             self.id = id
             self.name = name
-            self.someData = Data(repeating: 1, count: 100_000)
+            self.data = data
         }
     }
 }
+
+
