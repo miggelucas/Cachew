@@ -34,7 +34,7 @@ struct VaultTests {
         #expect(keychainServiceMock.addQuery?.isEmpty == false)
     }
     
-    @Test("setValue should thrown Error if status from keychain is different than errSecSuccess")
+    @Test("setValue should throw Error if status from keychain is different than errSecSuccess")
     func SetValueShouldThrownErrorIfStatusIsDifferentThanSuccess() async throws {
         let keychainServiceMock = KeychainServiceMock()
         let sut = VaultContainer(keychainService: keychainServiceMock)
