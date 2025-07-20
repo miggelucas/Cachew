@@ -6,8 +6,8 @@ import Foundation
 // MARK: - Performance tests
 @Suite("Performance Tests")
 struct PerformanceTests {
-    private typealias StashContainer = Stash<String, User>
-    private typealias SiloContainer = Silo<String, User>
+    private typealias StashContainer = Stash<String, SomeStorable>
+    private typealias SiloContainer = Silo<String, SomeStorable>
     
     private let operationCount_Stash = 10_000
     
@@ -20,7 +20,7 @@ struct PerformanceTests {
         let clock = ContinuousClock()
         let stash = StashContainer()
         let users = (0..<operationCount_Stash).map {
-            User(id: $0, name: "User \($0)", data: Data(repeating: 1, count: Int.random(in: 100..<100_000)))
+            SomeStorable(id: $0, name: "User \($0)", data: Data(repeating: 1, count: Int.random(in: 100..<100_000)))
         }
         
         let writeTime = await clock.measure {
@@ -58,7 +58,7 @@ struct PerformanceTests {
             // --- Stash Test ---
             let stash = StashContainer()
             let users = (0..<operationCount_Stats).map {
-                User(id: $0,
+                SomeStorable(id: $0,
                      name: "User \($0)",
                      data: Data(repeating: UInt8.random(in: 0...255),
                                 count: Int.random(in: 1000...10_000))
@@ -132,18 +132,5 @@ struct PerformanceTests {
     }
 }
 
-extension PerformanceTests {
-    private struct User: Storable {
-        let id: Int
-        let name: String
-        let data: Data
-        
-        init(id: Int, name: String, data: Data) {
-            self.id = id
-            self.name = name
-            self.data = data
-        }
-    }
-}
 
 

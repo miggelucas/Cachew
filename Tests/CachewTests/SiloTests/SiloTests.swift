@@ -21,7 +21,7 @@ final class SiloTests {
         let fileManager = FileManagerMock()
         
         // Act
-        let _ = try Silo<String, User>(cacheName: siloName, fileManager: fileManager)
+        let _ = try Silo<String, SomeStorable>(cacheName: siloName, fileManager: fileManager)
         
         // Assert
         #expect(fileManager.didCallCreateDirectory == true)
@@ -36,7 +36,7 @@ final class SiloTests {
         fileManager.shouldFailToFindDirectory = true
         
         #expect(throws: SiloError.cacheDirectoryMissing) {
-            _ = try Silo<String, User>(cacheName: self.siloName, fileManager: fileManager)
+            _ = try Silo<String, SomeStorable>(cacheName: self.siloName, fileManager: fileManager)
         }
         #expect(SiloError.cacheDirectoryMissing.errorDescription?.isEmpty == false, "Should have some error description")
     }
@@ -46,8 +46,8 @@ final class SiloTests {
         // Arrange
         let fileManager = FileManagerMock()
     
-        let sut: Silo<String, User> = try Silo(cacheName: siloName, fileManager: fileManager)
-        let user = User(id: 1, name: "John Snow")
+        let sut: Silo<String, SomeStorable> = try Silo(cacheName: siloName, fileManager: fileManager)
+        let user = SomeStorable(id: 1, name: "John Snow")
         let key = "user1"
         
         // Act
@@ -58,7 +58,7 @@ final class SiloTests {
         let dataWritten = fileManager.files[fileURL.path]
         #expect(dataWritten != nil)
         
-        let decodedUser = try JSONDecoder().decode(User.self, from: dataWritten!)
+        let decodedUser = try JSONDecoder().decode(SomeStorable.self, from: dataWritten!)
         #expect(decodedUser == user)
     }
     
@@ -66,8 +66,8 @@ final class SiloTests {
     func valueReadsData() async throws {
         // Arrange
         let fileManager = FileManagerMock()
-        let sut: Silo<String, User> = try Silo(cacheName: siloName, fileManager: fileManager)
-        let user = User(id: 2, name: "Daenerys Targaryen")
+        let sut: Silo<String, SomeStorable> = try Silo(cacheName: siloName, fileManager: fileManager)
+        let user = SomeStorable(id: 2, name: "Daenerys Targaryen")
         let key = "user2"
         
         // Prepara o mock: coloca os dados diretamente no sistema de arquivos virtual.
@@ -87,7 +87,7 @@ final class SiloTests {
     func valueForNonExistentKeyReturnsNil() async throws {
         // Arrange
         let fileManager = FileManagerMock()
-        let sut: Silo<String, User> = try Silo(cacheName: siloName, fileManager: fileManager)
+        let sut: Silo<String, SomeStorable> = try Silo(cacheName: siloName, fileManager: fileManager)
         let key = "nonExistentKey"
         
         // Act
@@ -101,8 +101,8 @@ final class SiloTests {
     func removeValueDeletesFile() async throws {
         // Arrange
         let fileManager = FileManagerMock()
-        let sut: Silo<String, User> = try Silo(cacheName: siloName, fileManager: fileManager)
-        let user = User(id: 3, name: "Tyrion Lannister")
+        let sut: Silo<String, SomeStorable> = try Silo(cacheName: siloName, fileManager: fileManager)
+        let user = SomeStorable(id: 3, name: "Tyrion Lannister")
         let key = "user3"
         
         // Prepara o mock
@@ -119,14 +119,4 @@ final class SiloTests {
     }
 }
 
-extension SiloTests {
-    // Representable storable object
-    private struct User: Storable, Equatable {
-        let id: Int
-        let name: String
-        
-        static func ==(lhs: Self, rhs: Self) -> Bool {
-            lhs.id == rhs.id && lhs.name == rhs.name
-        }
-    }
-}
+
