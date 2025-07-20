@@ -34,13 +34,8 @@ public struct KeychainService: KeychainServicing {
         return SecItemAdd(query as CFDictionary, nil)
     }
     
-    public func update(query: [String: Any], attributes: [String: Any]) -> OSStatus {
-        return SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
-    }
-    
     public func copyMatching(query: [String: Any], data: inout CFTypeRef?) -> OSStatus {
         return SecItemCopyMatching(query as CFDictionary, &data)
-        
     }
     
     @discardableResult
@@ -68,13 +63,15 @@ public actor Vault<Key: CachewKey, Value: Storable>: Store {
         
         var query: [String: Any] = baseQuery(forKey: key)
         
-        // deletes everything under this key to avoid any error by the space already been taken
+        // deletes everything under this key to avoid any error by space already been taken
         keychain.delete(query: query)
         
         query[kSecValueData as String] = data
         let status = keychain.add(query: query)
         
+        
         if status != errSecSuccess {
+            print("Failed to save data: \(status)")
             throw VaultError.unhandledError(status: status)
         }
     }
@@ -101,6 +98,7 @@ public actor Vault<Key: CachewKey, Value: Storable>: Store {
     
     public func removeValue(forKey key: Key) throws {
         let query = baseQuery(forKey: key)
+
         let status = keychain.delete(query: query)
         
         if status != errSecSuccess && status != errSecItemNotFound {
