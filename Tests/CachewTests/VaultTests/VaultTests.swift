@@ -173,7 +173,7 @@ struct VaultTests {
             await cleanup(forKey: key)
         }
         
-        @Test("Deleting a existing key should return nil when retrieving")
+        @Test("Deleting an existing key should return nil when retrieving")
         func DeletingValueShouldReturnNilWhenRetriving() async throws {
             // Arrange
             let sut = VaultContainer()
