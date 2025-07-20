@@ -8,43 +8,6 @@
 import Security
 import Foundation
 
-public enum VaultError: Error {
-    case encodingFailed(Error)
-    case decodingFailed(Error)
-    case unhandledError(status: OSStatus)
-}
-
-/// KeychainServicing
-///
-/// Apples have made a pretty shit job with secure data storage since the interaction with the keychain is done by direct open functions and not by some kind of a object with we can make a interface on it.
-/// Creating a protocol for making it easer to test Vault by having a dependency injection
-public protocol KeychainServicing {
-    func add(query: [String: Any]) -> OSStatus
-    func copyMatching(query: [String: Any], data: inout CFTypeRef?) -> OSStatus
-    @discardableResult
-    func delete(query: [String: Any]) -> OSStatus
-}
-
-/// KeychainService
-///
-/// Concrete implementation for the KeychainServicing
-/// It was meant to be as dumb as possible and it's only job should create a interface abstracting Security Keychain methods.
-public struct KeychainService: KeychainServicing {
-    public func add(query: [String: Any]) -> OSStatus {
-        return SecItemAdd(query as CFDictionary, nil)
-    }
-    
-    public func copyMatching(query: [String: Any], data: inout CFTypeRef?) -> OSStatus {
-        return SecItemCopyMatching(query as CFDictionary, &data)
-    }
-    
-    @discardableResult
-    public func delete(query: [String: Any]) -> OSStatus {
-        return SecItemDelete(query as CFDictionary)
-    }
-}
-
-
 
 public actor Vault<Key: CachewKey, Value: Storable>: Store {
     
@@ -71,7 +34,6 @@ public actor Vault<Key: CachewKey, Value: Storable>: Store {
         
         
         if status != errSecSuccess {
-            print("Failed to save data: \(status)")
             throw VaultError.unhandledError(status: status)
         }
     }
@@ -90,10 +52,8 @@ public actor Vault<Key: CachewKey, Value: Storable>: Store {
         if status != errSecSuccess {
             throw VaultError.unhandledError(status: status)
         }
-        guard let data = dataTypeRef as? Data else {
-            return nil
-        }
-        return try decode(data)
+        
+        return try decode(dataTypeRef as? Data)
     }
     
     public func removeValue(forKey key: Key) throws {
@@ -123,7 +83,8 @@ public actor Vault<Key: CachewKey, Value: Storable>: Store {
         }
     }
     
-    private func decode(_ data: Data) throws -> Value {
+    private func decode(_ data: Data?) throws -> Value? {
+        guard let data else { return nil }
         do {
             return try JSONDecoder().decode(Value.self, from: data)
         } catch {

@@ -6,52 +6,9 @@
 //
 
 import Testing
+import Security
 import Foundation
 @testable import Cachew
-
-import Security
-
-final class KeychainServiceMock: KeychainServicing, @unchecked Sendable {
-    var didCallAdd: Bool = false
-    var addQuery: [String : Any]?
-    var addResult: OSStatus = noErr
-    func add(query: [String : Any]) -> OSStatus {
-        didCallAdd = true
-        addQuery = query
-        return addResult
-    }
-    
-    var didCallUpdate: Bool = false
-    var updateQuery: [String : Any]?
-    var updateAttributes: [String : Any]?
-    var updateResult: OSStatus = noErr
-    func update(query: [String : Any], attributes: [String : Any]) -> OSStatus {
-        didCallUpdate = true
-        updateQuery = query
-        updateAttributes = attributes
-        return updateResult
-    }
-    
-    var didCallCopyMatching: Bool = false
-    var copyMatchingQuery: [String : Any]?
-    var copyMatchingData: CFTypeRef?
-    var copyMatchingResult: OSStatus = noErr
-    func copyMatching(query: [String : Any], data: inout CFTypeRef?) -> OSStatus {
-        didCallCopyMatching = true
-        copyMatchingQuery = query
-        data = copyMatchingData
-        return copyMatchingResult
-    }
-    
-    var didCallDelete: Bool = false
-    var deleteQuery: [String : Any]?
-    var deleteResult: OSStatus = noErr
-    func delete(query: [String : Any]) -> OSStatus {
-        didCallDelete = true
-        deleteQuery = query
-        return deleteResult
-    }
-}
 
 
 @Suite("Vault (Keychain) Tests")
@@ -59,7 +16,8 @@ struct VaultTests {
     
     typealias VaultContainer = Vault<String, SomeStorable>
     
-    @Test("setValue should store a value in the keychainService")
+    
+    @Test("setValue should call add method on the keychainService")
     func SetValueShouldCallMethods() async throws {
         // Arrange
         let keychainServiceMock = KeychainServiceMock()
@@ -74,6 +32,20 @@ struct VaultTests {
         #expect(keychainServiceMock.didCallDelete, "Should call delete before add")
         #expect(keychainServiceMock.didCallAdd)
         #expect(keychainServiceMock.addQuery?.isEmpty == false)
+    }
+    
+    @Test("setValue should thrown Error if status from keychain is different than errSecSuccess")
+    func SetValueShouldThrownErrorIfStatusIsDifferentThanSuccess() async throws {
+        let keychainServiceMock = KeychainServiceMock()
+        let sut = VaultContainer(keychainService: keychainServiceMock)
+        let user = SomeStorable(id: 1, name: "MySuperSecretToken")
+        let key = "testUser1"
+        
+        keychainServiceMock.addResult = errSecDuplicateItem
+        
+        await #expect(throws: VaultError.self, performing: {
+            try await sut.setValue(user, forKey: key)
+        })
     }
     
     @Test("getValue should call the getValue method of the keychainService")
@@ -93,6 +65,45 @@ struct VaultTests {
         #expect(keychainServiceMock.didCallCopyMatching)
         #expect(keychainServiceMock.copyMatchingQuery?.isEmpty == false)
         #expect(retrievedUser == user)
+    }
+    
+    @Test("getValue should not throw an error when keychain status its errSecItemNotFound")
+    func getValueNotThrowsErrorIfOSStatusItsErrSecItemNotFound() async throws {
+        let keychainServiceMock = KeychainServiceMock()
+        let sut = VaultContainer(keychainService: keychainServiceMock)
+        let key = "someKey"
+        
+        keychainServiceMock.copyMatchingResult = errSecItemNotFound
+        
+        await #expect(throws: Never.self, performing: {
+            try await sut.value(forKey: key)
+        })
+    }
+    
+    @Test("getValue should throw an error when keychain status its not success")
+    func getValueThrowsErrorIfOSStatusItsNotSuccess() async throws {
+        let keychainServiceMock = KeychainServiceMock()
+        let sut = VaultContainer(keychainService: keychainServiceMock)
+        let key = "someKey"
+        
+        keychainServiceMock.copyMatchingResult = errSecInvalidItemRef
+        
+        await #expect(throws: VaultError.self, performing: {
+            try await sut.value(forKey: key)
+        })
+    }
+    
+    @Test("getValue should throw an error when keychain status its not success")
+    func getValueThrowsError() async throws {
+        let keychainServiceMock = KeychainServiceMock()
+        let sut = VaultContainer(keychainService: keychainServiceMock)
+        let key = "someKey"
+        
+        keychainServiceMock.copyMatchingResult = errSecInvalidItemRef
+        
+        await #expect(throws: VaultError.self, performing: {
+            try await sut.value(forKey: key)
+        })
     }
     
     @Test("removeValue should call the removeValue method of the keychainService")
@@ -148,41 +159,47 @@ struct VaultTests {
             
             // Assert
             #expect(retrievedUser == nil)
+            
             // Revert
             await cleanup(forKey: key)
         }
         
-        @Test("value should retrieve a value from the keychainService")
-        func value() async throws {
-            let sut = VaultContainer()
-            let key = "testUser1"
-            let user = SomeStorable(id: 1, name: "Gal Costa")
-            
-            await #expect(throws: Never.self, performing: {
-                try await sut.setValue(user, forKey: key)
-            })
-            
-            // Act
-            let retrievedUser = try await sut.value(forKey: key)
-            
-            // Assert
-            #expect(retrievedUser == user)
-            // Revert
-            await cleanup(forKey: key)
-        }
         
-        @Test("setValue IT")
-        func SetValueIT() async throws {
+        @Test("setValue should store a value in the keychainService and be able to retrieve it")
+        func SetValueAndRetriveIT() async throws {
             // Arrange
             let sut = VaultContainer()
             let user = SomeStorable(id: 1, name: "MySuperSecretToken")
             let key = "testUser1"
             
-            
             // Act
             await #expect(throws: Never.self, performing: {
                 try await sut.setValue(user, forKey: key)
             })
+            
+            let retrievedUser = try await sut.value(forKey: key)
+            #expect(retrievedUser == user)
+            
+            // Revert
+            await cleanup(forKey: key)
+        }
+        
+        @Test("Deleting a existing key should return nil when retrieving")
+        func DeletingValueShouldReturnNilWhenRetriving() async throws {
+            // Arrange
+            let sut = VaultContainer()
+            let user = SomeStorable(id: 1, name: "MySuperSecretToken")
+            let key = "testUser1"
+            
+            // Act
+            await #expect(throws: Never.self, performing: {
+                try await sut.setValue(user, forKey: key)
+                try await sut.removeValue(forKey: key)
+            })
+            
+            // Assert
+            let retrievedUser = try await sut.value(forKey: key)
+            #expect(retrievedUser == nil)
             
             // Revert
             await cleanup(forKey: key)

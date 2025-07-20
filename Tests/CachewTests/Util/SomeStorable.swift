@@ -9,10 +9,17 @@ import Cachew
 import Foundation
 
 
+/// SomeStorable
+///
+/// Sample object for testing purposes
 struct SomeStorable: Storable, Equatable {
     let id: Int
     let name: String
     let data: Data?
+    
+    var cacheKey: any CachewKey {
+        return id
+    }
     
     init(id: Int, name: String, data: Data? = nil) {
         self.id = id
@@ -21,6 +28,6 @@ struct SomeStorable: Storable, Equatable {
     }
     
     static func ==(lhs: Self, rhs: Self) -> Bool {
-        lhs.id == rhs.id && lhs.name == rhs.name && lhs.data == rhs.data
+        lhs.id == rhs.id
     }
 }
