@@ -28,6 +28,8 @@ struct SomeStorable: Storable, Equatable {
     }
     
     static func ==(lhs: Self, rhs: Self) -> Bool {
-        lhs.id == rhs.id
+        return lhs.id == rhs.id &&
+               lhs.name == rhs.name &&
+               lhs.data == rhs.data
     }
 }
