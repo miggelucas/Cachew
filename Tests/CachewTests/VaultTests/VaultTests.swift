@@ -93,18 +93,7 @@ struct VaultTests {
         })
     }
     
-    @Test("getValue should throw an error when keychain status its not success")
-    func getValueThrowsError() async throws {
-        let keychainServiceMock = KeychainServiceMock()
-        let sut = VaultContainer(keychainService: keychainServiceMock)
-        let key = "someKey"
-        
-        keychainServiceMock.copyMatchingResult = errSecInvalidItemRef
-        
-        await #expect(throws: VaultError.self, performing: {
-            try await sut.value(forKey: key)
-        })
-    }
+// Removed duplicate test `getValueThrowsError` as it is identical to `getValueThrowsErrorIfOSStatusItsNotSuccess`.
     
     @Test("removeValue should call the removeValue method of the keychainService")
     func removeValue() async throws {
