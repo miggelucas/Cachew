@@ -1,26 +1,25 @@
-
 name: Build and Test Cachew
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build-and-test:
     name: Build & Test
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Swift
-      uses: SwiftyLab/setup-swift@latest
+      - name: Setup Swift
+        uses: SwiftyLab/setup-swift@latest
 
-    - name: Build
-      run: swift build -v
+      - name: Build
+        run: swift build -v
 
-    - name: Run tests
-      run: swift test -v
+      - name: Run tests
+        run: swift test -v
