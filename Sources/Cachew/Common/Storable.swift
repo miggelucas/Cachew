@@ -6,7 +6,6 @@
 //
 
 
-public protocol Storable: Sendable & Codable {
-    var cacheKey: any CachewKey { get }
-}
+public protocol Storable: Sendable & Codable {}
+
 
