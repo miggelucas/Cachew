@@ -21,6 +21,6 @@ final class KeyContainer: NSObject, Sendable {
         guard let value = object as? KeyContainer else {
             return false
         }
-        return value.key == key
+        return value.key.hashValue == key.hashValue
     }
 }
