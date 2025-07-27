@@ -8,73 +8,70 @@
 import Foundation
 
 
-protocol NSCacheDelegateAdaptable: NSObject, NSCacheDelegate {
-    var delegate: CacheHandler? { get set }
-}
 
 protocol CacheHandler: AnyObject {
     func cacheWillRemoveObject(_ cacheName: String, _ object: StorableContainer)
 }
 
+class HydraCache: NSCache<WrappedKey, StorableContainer>, NSCacheDelegate {
+    weak var cacheHandler: (any CacheHandler)?
+    
+    override
+    init() {
+        super.init()
+        self.delegate = self
+    }
 
-class NSCCacheDelegateAdapter: NSObject, NSCacheDelegateAdaptable {
-    
-    weak var delegate: (any CacheHandler)?
-    
     func cache(_ cache: NSCache<AnyObject, AnyObject>, willEvictObject obj: Any) {
-        guard let container = obj as? StorableContainer, let parent = self.delegate else {
+        guard let container = obj as? StorableContainer, let handler = self.cacheHandler else {
             return
         }
         
-        print("💧 Hydra Delegate: Pressão de memória detectada! Movendo o item '\(container.key)' para o disco (Silo)...")
-        
-        parent.cacheWillRemoveObject(cache.name, container)
+        handler.cacheWillRemoveObject(cache.name, container)
     }
 }
 
+
+
 public actor Hydra<Key: CachewKey, Value: Storable>  {
     typealias HydraContainer = StorableContainer
+    typealias HydraSilo = Silo<Key, Value>
     
-    let cache: NSCache<WrappedKey, HydraContainer>
-    let cacheAdapter = NSCCacheDelegateAdapter()
-    let silo:  Silo<Key, Value>?
+    let silo: HydraSilo?
     let id = UUID()
     
-    private var cacheName: String { cache.name }
+    let hydraCache: HydraCache
     
-    public init() {
-        self.silo = try? Silo<Key, Value>(cacheName: id.uuidString)
-        self.cache = NSCache<WrappedKey, HydraContainer>()
-        cache.name = id.uuidString
-        cache.delegate = cacheAdapter
-        cache.countLimit = 2
-        cacheAdapter.delegate = self
+    private var cacheName: String { hydraCache.name }
+    
+    public init(cacheSize: CacheSize = .medium) {
+        self.silo = try? HydraSilo(cacheName: id.uuidString)
+        self.hydraCache = HydraCache()
+        self.hydraCache.countLimit = cacheSize.countLimit
+        self.hydraCache.cacheHandler = self
     }
     
     // -- memory cache --
     public func setValue(_ value: Value, forKey key: Key) {
         let entry = HydraContainer(value: value, key: key)
         let wrappedKey = WrappedKey(key)
-        cache.setObject(entry, forKey: wrappedKey)
+        hydraCache.setObject(entry, forKey: wrappedKey)
     }
     
     public func value(forKey key: Key) -> Value? {
         let wrappedKey = WrappedKey(key)
-        let entry = cache.object(forKey: wrappedKey)
-        if let value = entry?.value as? Value {
-            return value
-        } else {
-            return nil
-        }
+        guard let cachedObject = hydraCache.object(forKey: wrappedKey),
+              let value = cachedObject.value as? Value else { return nil }
+        return value
     }
     
     public func removeValue(forKey key: Key) {
         let wrappedKey = WrappedKey(key)
-        cache.removeObject(forKey: wrappedKey)
+        hydraCache.removeObject(forKey: wrappedKey)
     }
     
-    func doSomethingWithObject(_ object: Value) {
-        print("opa")
+    func doSomethingWithObject(_ key: Key, _ object: Value) {
+        print("cache did evict object for key: \(key)")
     }
 }
 
@@ -82,8 +79,34 @@ extension Hydra: CacheHandler {
     nonisolated func cacheWillRemoveObject(_ cacheName: String, _ object: StorableContainer) {
         Task {
             guard await self.cacheName == cacheName else { return }
+            guard let key = object.key as? Key else { return }
             guard let value = object.value as? Value else { return }
-            await doSomethingWithObject(value)
+            await doSomethingWithObject(key, value)
+        }
+    }
+}
+
+extension Hydra {
+    public enum CacheSize: Sendable {
+        case small
+        case medium
+        case large
+        case extraLarge
+        case custom(Int)
+        
+        var countLimit: Int {
+            switch self {
+            case .small:
+                return 10
+            case .medium:
+                return 100
+            case .large:
+                return 1000
+            case .extraLarge:
+                return 10000
+                case .custom(let size):
+                return size
+            }
         }
     }
 }
