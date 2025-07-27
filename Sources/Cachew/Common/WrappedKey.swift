@@ -21,6 +21,6 @@ final class WrappedKey: NSObject, Sendable {
         guard let value = object as? WrappedKey else {
             return false
         }
-        return value.key.hashValue == key.hashValue
+        return value.key == key
     }
 }
