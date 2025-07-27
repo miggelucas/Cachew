@@ -37,7 +37,7 @@ struct HydraTests {
         
         for id in (itemsToEvictCount + 1)...itemsToAdd {
             let value = await sut.value(forKey: id)
-            #expect(value != nil, "Tje item \(id), a newest, should not be evicted.")
+            #expect(value != nil, "The item \(id), a newest, should not be evicted.")
         }
     }
     
