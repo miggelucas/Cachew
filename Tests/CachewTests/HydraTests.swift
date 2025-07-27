@@ -65,7 +65,7 @@ struct HydraTests {
         #expect(value3 != nil, "Item 3 should still be in cache since it was accessed recently.")
         
         let value4 = await sut.value(forKey: 4)
-        #expect(value4 != nil, "Item 3 should still be in cache since it was accessed recently.")
+        #expect(value4 != nil, "Item 4 should still be in cache since it was accessed recently.")
         
         let value5 = await sut.value(forKey: 5)
         #expect(value5 != nil, "Item 3 should still be in cache since it was accessed recently.")
