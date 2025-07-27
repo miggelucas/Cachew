@@ -13,7 +13,7 @@ protocol CacheHandler: AnyObject {
     func cacheWillRemoveObject(_ cacheName: String, _ object: StorableContainer)
 }
 
-class HydraCache: NSCache<WrappedKey, StorableContainer>, NSCacheDelegate {
+class HydraCache: NSCache<KeyContainer, StorableContainer>, NSCacheDelegate {
     weak var cacheHandler: (any CacheHandler)?
     
     override
@@ -54,19 +54,19 @@ public actor Hydra<Key: CachewKey, Value: Storable>  {
     // -- memory cache --
     public func setValue(_ value: Value, forKey key: Key) {
         let entry = HydraContainer(value: value, key: key)
-        let wrappedKey = WrappedKey(key)
+        let wrappedKey = KeyContainer(key)
         hydraCache.setObject(entry, forKey: wrappedKey)
     }
     
     public func value(forKey key: Key) -> Value? {
-        let wrappedKey = WrappedKey(key)
+        let wrappedKey = KeyContainer(key)
         guard let cachedObject = hydraCache.object(forKey: wrappedKey),
               let value = cachedObject.value as? Value else { return nil }
         return value
     }
     
     public func removeValue(forKey key: Key) {
-        let wrappedKey = WrappedKey(key)
+        let wrappedKey = KeyContainer(key)
         hydraCache.removeObject(forKey: wrappedKey)
     }
     

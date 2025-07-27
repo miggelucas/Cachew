@@ -8,11 +8,11 @@
 
 final class StorableContainer: Sendable {
     let value: Storable
-    let key: WrappedKey
+    let key: KeyContainer
     
     init(value: Storable, key: some CachewKey) {
         self.value = value
-        self.key = WrappedKey.init(key)
+        self.key = KeyContainer(key)
     }
 }
 
