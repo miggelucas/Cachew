@@ -13,6 +13,7 @@ import Foundation
 @Suite("Silo (Disk Cache) Tests")
 final class SiloTests {
         
+    typealias Sut = Silo<String, SomeStorable>
     private let siloName = "TestCache"
     
     @Test("Initialization should create cache directory")
@@ -21,24 +22,28 @@ final class SiloTests {
         let fileManager = FileManagerMock()
         
         // Act
-        let _ = try Silo<String, SomeStorable>(cacheName: siloName, fileManager: fileManager)
+        let _ = Sut(cacheName: siloName, fileManager: fileManager)
         
         // Assert
-        #expect(fileManager.didCallCreateDirectory == true)
+        #expect(fileManager.didCallCreateDirectory)
         let expectedPath = fileManager.directoryURL.appendingPathComponent(siloName).path
         #expect(fileManager.directories.contains(expectedPath))
     }
     
-    @Test("Initialization should throw directoryCreationFailed error when directory is not found")
+    @Test("if initialization with cacheDirectory fails should use temporary directory")
     func initThrowsErrorWhenDirectoryNotFound() {
         // Arrange
         let fileManager = FileManagerMock()
-        fileManager.shouldFailToFindDirectory = true
+        fileManager.shouldFailToFindCacheDirectory = true
         
-        #expect(throws: SiloError.cacheDirectoryMissing) {
-            _ = try Silo<String, SomeStorable>(cacheName: self.siloName, fileManager: fileManager)
-        }
-        #expect(SiloError.cacheDirectoryMissing.errorDescription?.isEmpty == false, "Should have some error description")
+        // Act
+        let _ = Sut(cacheName: siloName, fileManager: fileManager)
+       
+        // Assert
+        #expect(fileManager.didCallTemporaryDirectory)
+        #expect(fileManager.didCallCreateDirectory)
+        let expectedPath = fileManager.temporaryDirectory.appending(path: siloName).path()
+        #expect(fileManager.directories.contains(expectedPath))
     }
     
     @Test("setValue should use fileManager to write data")
@@ -46,7 +51,7 @@ final class SiloTests {
         // Arrange
         let fileManager = FileManagerMock()
     
-        let sut: Silo<String, SomeStorable> = try Silo(cacheName: siloName, fileManager: fileManager)
+        let sut = Sut(cacheName: siloName, fileManager: fileManager)
         let user = SomeStorable(id: 1, name: "John Snow")
         let key = "user1"
         
@@ -66,7 +71,7 @@ final class SiloTests {
     func valueReadsData() async throws {
         // Arrange
         let fileManager = FileManagerMock()
-        let sut: Silo<String, SomeStorable> = try Silo(cacheName: siloName, fileManager: fileManager)
+        let sut = Sut(cacheName: siloName, fileManager: fileManager)
         let user = SomeStorable(id: 2, name: "Daenerys Targaryen")
         let key = "user2"
         
@@ -87,7 +92,7 @@ final class SiloTests {
     func valueForNonExistentKeyReturnsNil() async throws {
         // Arrange
         let fileManager = FileManagerMock()
-        let sut: Silo<String, SomeStorable> = try Silo(cacheName: siloName, fileManager: fileManager)
+        let sut = Sut(cacheName: siloName, fileManager: fileManager)
         let key = "nonExistentKey"
         
         // Act
@@ -101,7 +106,7 @@ final class SiloTests {
     func removeValueDeletesFile() async throws {
         // Arrange
         let fileManager = FileManagerMock()
-        let sut: Silo<String, SomeStorable> = try Silo(cacheName: siloName, fileManager: fileManager)
+        let sut = Sut(cacheName: siloName, fileManager: fileManager)
         let user = SomeStorable(id: 3, name: "Tyrion Lannister")
         let key = "user3"
         

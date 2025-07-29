@@ -19,16 +19,15 @@ public actor Silo<Key: CachewKey, Value: Storable>: Store {
     /// - Parameters:
     ///   - siloName: A unique name for the cache directory (e.g., "images", "articles").
     ///   - fileManager: The file manager to use for all disk operations.
-    init(cacheName: String, fileManager: FileManagerProtocol) throws {
+    init(cacheName: String, fileManager: FileManagerProtocol) {
         self.fileManager = fileManager
         self.cacheName = cacheName
         
-        guard let cachesDirectory = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first else {
-            throw SiloError.cacheDirectoryMissing
-        }
-        self.directoryURL = cachesDirectory.appendingPathComponent(cacheName, isDirectory: true)
+        
+        let cacheDirectory: URL = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first ?? fileManager.temporaryDirectory
+        self.directoryURL = cacheDirectory.appendingPathComponent(cacheName, isDirectory: true)
         if !fileManager.fileExists(atPath: self.directoryURL.path) {
-            try fileManager.createDirectory(at: self.directoryURL, withIntermediateDirectories: true, attributes: nil)
+            try? fileManager.createDirectory(at: self.directoryURL, withIntermediateDirectories: true, attributes: nil)
         }
     }
     
@@ -36,8 +35,8 @@ public actor Silo<Key: CachewKey, Value: Storable>: Store {
     /// It automatically uses the default file manager.
     ///
     /// - Parameter siloName: A unique name for the cache directory.
-    public init(cacheName: String) throws {
-        try self.init(cacheName: cacheName, fileManager: FileManager.default)
+    public init(cacheName: String) {
+        self.init(cacheName: cacheName, fileManager: FileManager.default)
     }
     
     // MARK: - Storable Conformance
@@ -61,6 +60,10 @@ public actor Silo<Key: CachewKey, Value: Storable>: Store {
         if fileManager.fileExists(atPath: fileURL.path) {
             try fileManager.removeItem(at: fileURL)
         }
+    }
+    
+    public func size() throws -> Double {
+        return try fileManager.sizeOfDirectory(at: directoryURL)
     }
     
     // MARK: - Internal Helpers
