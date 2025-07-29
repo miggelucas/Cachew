@@ -42,7 +42,7 @@ final class SiloTests {
         // Assert
         #expect(fileManager.didCallTemporaryDirectory)
         #expect(fileManager.didCallCreateDirectory)
-        let expectedPath = fileManager.temporaryDirectory.appending(path: siloName).path()
+        let expectedPath = fileManager.temporaryDirectory.appendingPathComponent(siloName).path
         #expect(fileManager.directories.contains(expectedPath))
     }
     

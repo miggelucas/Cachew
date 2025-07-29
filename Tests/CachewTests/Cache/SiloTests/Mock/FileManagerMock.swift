@@ -11,7 +11,7 @@ import Foundation
 
 final class FileManagerMock: FileManagerProtocol, @unchecked Sendable {
     var didCallTemporaryDirectory: Bool = false
-    var temporaryDirectoryMock = URL(filePath: "test")
+    var temporaryDirectoryMock = URL(fileURLWithPath: "test")
     var temporaryDirectory: URL {
         didCallTemporaryDirectory = true
         return temporaryDirectoryMock
