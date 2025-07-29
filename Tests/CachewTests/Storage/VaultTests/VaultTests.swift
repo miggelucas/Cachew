@@ -93,8 +93,6 @@ struct VaultTests {
         })
     }
     
-// Removed duplicate test `getValueThrowsError` as it is identical to `getValueThrowsErrorIfOSStatusItsNotSuccess`.
-    
     @Test("removeValue should call the removeValue method of the keychainService")
     func removeValue() async throws {
         // Arrange
