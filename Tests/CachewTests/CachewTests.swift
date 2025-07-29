@@ -82,7 +82,7 @@ struct PerformanceTests {
             stashReadDurations.append(stashReadTime.asTimeInterval)
             
             // --- Silo Test ---
-            let silo = try SiloContainer(cacheName: "StatTestSilo_\(i)")
+            let silo = SiloContainer(cacheName: "StatTestSilo_\(i)")
             
             // Silo Write
             let siloWriteTime = try await clock.measure {

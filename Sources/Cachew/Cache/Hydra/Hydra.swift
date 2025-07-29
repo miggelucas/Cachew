@@ -22,7 +22,7 @@ public actor Hydra<Key: CachewKey, Value: Storable>  {
     init(
         cache: HydraCacheProtocol = HydraCache(),
         cacheSize: CacheSize = .medium,
-        silo: (any Store)? = try? HydraSilo(cacheName: UUID().uuidString)
+        silo: (any Store) = HydraSilo(cacheName: UUID().uuidString)
     ) {
         self.hydraCache = cache
         self.hydraCache.countLimit = cacheSize.countLimit
@@ -32,7 +32,7 @@ public actor Hydra<Key: CachewKey, Value: Storable>  {
     }
     
     public init(cacheSize: CacheSize = .medium) {
-        self.silo = try? HydraSilo(cacheName: id.uuidString)
+        self.silo = HydraSilo(cacheName: id.uuidString)
         self.hydraCache = HydraCache()
         self.hydraCache.countLimit = cacheSize.countLimit
         self.hydraCache.cacheHandler = self

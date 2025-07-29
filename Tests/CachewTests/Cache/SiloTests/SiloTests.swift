@@ -31,7 +31,7 @@ final class SiloTests {
     }
     
     @Test("if initialization with cacheDirectory fails should use temporary directory")
-    func initThrowsErrorWhenDirectoryNotFound() {
+    func ifInitializationWithCachedirectoryFailsShouldUseTemporaryDirectory() {
         // Arrange
         let fileManager = FileManagerMock()
         fileManager.shouldFailToFindCacheDirectory = true
