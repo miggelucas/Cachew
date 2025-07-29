@@ -1,3 +1,13 @@
+//
+//  HydraCacheProtocol.swift
+//  Cachew
+//
+//  Created by Lucas Migge on 27/07/25.
+//
+
+import Foundation
+
+
 protocol HydraCacheProtocol: AnyObject {
     var name: String { get set }
     
@@ -17,5 +27,5 @@ protocol HydraCacheProtocol: AnyObject {
     
     var countLimit: Int { get set }
     
-    var evictsObjectsWithDiscardedContent: Bool { get set }
+    func cache(_ cache: NSCache<AnyObject, AnyObject>, willEvictObject obj: Any)
 }

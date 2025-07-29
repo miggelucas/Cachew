@@ -10,6 +10,12 @@ import Foundation
 
 
 final class FileManagerMock: FileManagerProtocol, @unchecked Sendable {
+    var didCallTemporaryDirectory: Bool = false
+    var temporaryDirectoryMock = URL(filePath: "test")
+    var temporaryDirectory: URL {
+        didCallTemporaryDirectory = true
+        return temporaryDirectoryMock
+    }
     
     // Simulates the file system: [FilePath: FileData]
     var files: [String: Data] = [:]
@@ -17,11 +23,11 @@ final class FileManagerMock: FileManagerProtocol, @unchecked Sendable {
     var didCallCreateDirectory = false
         
     let directoryURL = URL(fileURLWithPath: "test")
-    var shouldFailToFindDirectory = false
+    var shouldFailToFindCacheDirectory = false
     
     func urls(for directory: FileManager.SearchPathDirectory, in domainMask: FileManager.SearchPathDomainMask) -> [URL] {
         
-        if shouldFailToFindDirectory {
+        if shouldFailToFindCacheDirectory {
             return []
         } else {
             return [directoryURL]
@@ -51,5 +57,9 @@ final class FileManagerMock: FileManagerProtocol, @unchecked Sendable {
     
     func readData(from url: URL) throws -> Data {
         return files[url.path] ?? Data()
+    }
+    
+    func sizeOfDirectory(at url: URL) throws -> Double {
+        return 0
     }
 }

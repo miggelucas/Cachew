@@ -5,6 +5,9 @@
 //  Created by Lucas Migge on 27/07/25.
 //
 
+import Foundation
+@testable import Cachew
+
 
 final class CacheMock: HydraCacheProtocol, @unchecked Sendable {
     var nameMock = "Mock"

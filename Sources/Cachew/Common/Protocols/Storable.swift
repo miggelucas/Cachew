@@ -6,6 +6,6 @@
 //
 
 
-public protocol Storable: Sendable & Codable {}
+public protocol Storable: Sendable & Codable & Hashable {}
 
 

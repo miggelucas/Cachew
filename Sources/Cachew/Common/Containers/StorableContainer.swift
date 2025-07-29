@@ -7,10 +7,10 @@
 
 
 final class StorableContainer: Sendable {
-    let value: Storable
+    let value: any Storable
     let key: KeyContainer
     
-    init(value: Storable, key: some CachewKey) {
+    init(value: some Storable, key: some CachewKey) {
         self.value = value
         self.key = KeyContainer(key)
     }

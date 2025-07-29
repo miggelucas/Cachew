@@ -17,7 +17,8 @@ final class KeyContainer: NSObject, Sendable {
     
     override var hash: Int { return key.hashValue }
     
-    override func isEqual(_ object: Any?) -> Bool {
+    override
+    func isEqual(_ object: Any?) -> Bool {
         guard let value = object as? KeyContainer else {
             return false
         }

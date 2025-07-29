@@ -6,7 +6,7 @@
 //
 
 
-public protocol Store {
+public protocol Store: AnyObject {
     associatedtype Key: CachewKey
     associatedtype Value: Storable
     
