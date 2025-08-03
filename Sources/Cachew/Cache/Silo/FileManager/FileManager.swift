@@ -31,7 +31,7 @@ extension FileManager: FileManagerProtocol {
             includingPropertiesForKeys: [.totalFileAllocatedSizeKey, .fileAllocatedSizeKey],
             options: .skipsHiddenFiles
         ) else {
-            print("Erro: Não foi possível criar o enumerador para o diretório.")
+            print("Error: Could not create enumerator for directory.")
             throw SiloError.cacheDirectoryMissing
         }
         
