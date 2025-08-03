@@ -85,10 +85,10 @@ struct HydraTests {
             sut.cacheWillRemoveObject("TestId", storableContainer)
             
             try await Task.sleep(for: .milliseconds(100))
-            #expect(await storageMock.storeValueCalled, "setValue deve ser chamado no silo ao remover do cache")
-            #expect(await storageMock.lastSavedKey?.hashValue == key.hashValue, "Chave salva no silo deve ser igual à removida do cache")
+            #expect(await storageMock.storeValueCalled, "setValue should be called on the silo when removing from cache")
+            #expect(await storageMock.lastSavedKey?.hashValue == key.hashValue, "Key saved in the silo should be equal to the one removed from the cache")
             let storedValue = await storageMock.lastSavedValue as? SomeStorable
-            #expect(storedValue == value, "Valor salvo no silo deve ser igual ao removido do cache")
+            #expect(storedValue == value, "Value saved in the silo should be equal to the one removed from the cache")
         }
         
         @Test("Should evict the oldest items when the count limit is reached",
