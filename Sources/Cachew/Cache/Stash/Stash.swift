@@ -32,3 +32,4 @@ public actor Stash<Key: CachewKey, Value: Sendable>: Cache {
         cache.removeObject(forKey: wrappedKey)
     }
 }
+
