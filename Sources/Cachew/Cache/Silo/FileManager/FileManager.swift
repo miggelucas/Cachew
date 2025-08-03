@@ -40,7 +40,7 @@ extension FileManager: FileManagerProtocol {
                 let values = try fileURL.resourceValues(forKeys: [.totalFileAllocatedSizeKey, .fileAllocatedSizeKey])
                 totalSize += UInt64(values.totalFileAllocatedSize ?? values.fileAllocatedSize ?? 0)
             } catch {
-                print("Erro ao obter o tamanho do arquivo \(fileURL.path): \(error)")
+                print("Error obtaining the size of file \(fileURL.path): \(error)")
                 throw SiloError.cacheDirectoryMissing
             }
         }
