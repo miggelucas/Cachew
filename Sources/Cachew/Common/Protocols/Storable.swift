@@ -6,12 +6,4 @@
 //
 
 
-public protocol Storable: Sendable & Codable & Hashable where Self: Equatable {}
-
-extension Storable {
-    static public func ==(lhs: Self, rhs: Self) -> Bool {
-        lhs.hashValue == rhs.hashValue
-    }
-}
-
-
+public protocol Storable: Sendable & Codable & Hashable {}
