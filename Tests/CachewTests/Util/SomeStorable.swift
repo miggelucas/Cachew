@@ -12,14 +12,10 @@ import Foundation
 /// SomeStorable
 ///
 /// Sample object for testing purposes
-struct SomeStorable: Storable, Equatable {
+struct SomeStorable: Storable, Equatable {    
     let id: Int
     let name: String
     let data: Data?
-    
-    var cacheKey: any CachewKey {
-        return id
-    }
     
     init(id: Int, name: String, data: Data? = nil) {
         self.id = id

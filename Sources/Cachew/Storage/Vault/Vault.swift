@@ -32,7 +32,6 @@ public actor Vault<Key: CachewKey, Value: Storable>: Store {
         query[kSecValueData as String] = data
         let status = keychain.add(query: query)
         
-        
         if status != errSecSuccess {
             throw VaultError.unhandledError(status: status)
         }

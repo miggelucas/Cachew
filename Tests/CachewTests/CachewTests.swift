@@ -3,6 +3,7 @@ import Foundation
 @testable import Cachew
 
 
+
 // MARK: - Performance tests
 @Suite("Performance Tests")
 struct PerformanceTests {
@@ -17,34 +18,30 @@ struct PerformanceTests {
     
     @Test("Stash write and read performance")
     func stashPerformance() async throws {
-        let clock = ContinuousClock()
         let stash = StashContainer()
         let users = (0..<operationCount_Stash).map {
             SomeStorable(id: $0, name: "User \($0)", data: Data(repeating: 1, count: Int.random(in: 100..<100_000)))
         }
         
-        let writeTime = await clock.measure {
+        let writeTime = await Clock.measure {
             for user in users {
                 await stash.setValue(user, forKey: String(user.id))
             }
         }
         print("StashTest - Time to write \(operationCount_Stash) Objects: \(writeTime) seconds")
 
-        let readTime = await clock.measure {
+        let readTime = await Clock.measure {
             for user in users {
                 _ = await stash.value(forKey: String(user.id))
             }
         }
         print("StashTest - Time to read \(operationCount_Stash) Objects: \(readTime) seconds")
         
-        #expect(writeTime.components.seconds < 1 && readTime.components.seconds < 1, "Stash Memory should be fast enough for this test")
+        #expect(writeTime < 1 && readTime < 1, "Stash Memory should be fast enough for this test")
     }
     
     @Test("Stash vs. Silo statistical performance comparison")
     func statisticalComparison() async throws {
-        
-        let clock = ContinuousClock()
-        
         var stashWriteDurations: [TimeInterval] = []
         var stashReadDurations: [TimeInterval] = []
         var siloWriteDurations: [TimeInterval] = []
@@ -66,39 +63,39 @@ struct PerformanceTests {
             }
             
             // Stash write
-            let stashWriteTime = await clock.measure {
+            let stashWriteTime = await Clock.measure {
                 for user in users {
                     await stash.setValue(user, forKey: String(user.id))
                 }
             }
-            stashWriteDurations.append(stashWriteTime.asTimeInterval)
+            stashWriteDurations.append(stashWriteTime)
             
             // Stash Read
-            let stashReadTime = await clock.measure {
+            let stashReadTime = await Clock.measure {
                 for j in 0..<operationCount_Stats {
                     _ = await stash.value(forKey: String(j))
                 }
             }
-            stashReadDurations.append(stashReadTime.asTimeInterval)
+            stashReadDurations.append(stashReadTime)
             
             // --- Silo Test ---
-            let silo = try SiloContainer(cacheName: "StatTestSilo_\(i)")
+            let silo = SiloContainer(cacheName: "StatTestSilo_\(i)")
             
             // Silo Write
-            let siloWriteTime = try await clock.measure {
+            let siloWriteTime = try await Clock.measure {
                 for user in users {
                     try await silo.setValue(user, forKey: String(user.id))
                 }
             }
-            siloWriteDurations.append(siloWriteTime.asTimeInterval)
+            siloWriteDurations.append(siloWriteTime)
             
             // Silo Read
-            let siloReadTime = try await clock.measure {
+            let siloReadTime = try await Clock.measure {
                 for j in 0..<operationCount_Stats {
                     _ = try await silo.value(forKey: String(j))
                 }
             }
-            siloReadDurations.append(siloReadTime.asTimeInterval)
+            siloReadDurations.append(siloReadTime)
         
             try? await FileManager.default.removeItem(at: silo.directoryURL)
         }
