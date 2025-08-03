@@ -19,10 +19,10 @@ extension FileManager: FileManagerProtocol {
         try Data(contentsOf: url)
     }
     
-    /// Calcula o tamanho total de um diretório, incluindo todos os seus subdiretórios e arquivos.
+    /// Calculates the total size of a directory, including all its subdirectories and files.
     ///
-    /// - Parameter url: A URL do diretório que você quer medir.
-    /// - Returns: O tamanho total em bytes (UInt64), ou `nil` se o diretório não puder ser lido.
+    /// - Parameter url: The URL of the directory to measure.
+    /// - Returns: The total size in bytes (UInt64), or `nil` if the directory cannot be read.
     public func sizeOfDirectory(at url: URL) throws -> Double {
         var totalSize: UInt64 = 0
         
