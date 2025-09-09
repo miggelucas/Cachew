@@ -7,7 +7,7 @@ import Foundation
 // MARK: - Performance tests
 @Suite("Performance Tests")
 struct PerformanceTests {
-    private typealias StashContainer = Stash<String, SomeStorable>
+    private typealias StashContainer = Hydra<String, SomeStorable>
     private typealias SiloContainer = Silo<String, SomeStorable>
     
     private let operationCount_Stash = 10_000
@@ -52,7 +52,7 @@ struct PerformanceTests {
         for i in 1...sampleCount_Stats {
             print("StatsTest - Running sample \(i)/\(sampleCount_Stats)...")
             
-            // --- Stash Test ---
+            // --- Stash Test (now using Hydra) ---
             let stash = StashContainer()
             let users = (0..<operationCount_Stats).map {
                 SomeStorable(id: $0,

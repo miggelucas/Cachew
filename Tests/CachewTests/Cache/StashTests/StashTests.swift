@@ -9,12 +9,12 @@ import Testing
 @testable import Cachew
 
 
-@Suite("Stash In-Memory Cache Tests")
+@Suite("Stash In-Memory Cache Tests (Now powered by Hydra)")
 struct StashTests {
     
     @Test("Set value should store it in the cache")
     func setValueStoresValue() async throws {
-        let cache = Stash<String, String>()
+        let cache = Hydra<String, String>()
         let key = "testKey"
         let expectedValue = "testValue"
         
@@ -26,7 +26,7 @@ struct StashTests {
     
     @Test("Value for a non-existent key should be nil")
     func valueForNonExistentKeyIsNil() async throws {
-        let cache = Stash<String, String>()
+        let cache = Hydra<String, String>()
         let key = "nonExistentKey"
         
         let retrievedValue = await cache.value(forKey: key)
@@ -37,7 +37,7 @@ struct StashTests {
     @Test("Remove value should make it nil")
     func removeValueMakesValueNil() async throws {
         // Arrange
-        let cache = Stash<String, String>()
+        let cache = Hydra<String, String>()
         let key = "keyToRemove"
         let value = "valueToRemove"
         await cache.setValue(value, forKey: key)
@@ -55,7 +55,7 @@ struct StashTests {
     
     @Test("Set value on same key should update current Value")
     func setValueOnSameKeyUpdatesCurrentValue() async throws {
-        let cache = Stash<String, String>()
+        let cache = Hydra<String, String>()
         let key = "keyToUpdate"
         let initialValue = "initialValue"
         await cache.setValue(initialValue, forKey: key)
